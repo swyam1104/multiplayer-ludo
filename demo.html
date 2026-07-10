@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Test Client</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
+        #logs { height: 300px; overflow-y: auto; background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Ludo Backend Test Client</h1>
+
+    <div class="section" id="auth-section">
+        <h3>1. Register / Login</h3>
+        <input type="text" id="username" placeholder="Username" value="testuser1">
+        <input type="email" id="email" placeholder="Email" value="test1@test.com">
+        <input type="password" id="password" placeholder="Password" value="password">
+        <button onclick="register()">Register</button>
+        <button onclick="login()">Login</button>
+        <p>Token: <input type="text" id="token" readonly size="50"></p>
+        <p>User ID: <input type="text" id="userId" readonly size="40"></p>
+    </div>
+
+    <div class="section" id="room-section">
+        <h3>2. Rooms</h3>
+        <button onclick="createRoom()">Create Room</button>
+        <input type="text" id="roomCode" placeholder="Room Code">
+        <button onclick="joinRoom()">Join Room</button>
+    </div>
+
+    <div class="section" id="ws-section">
+        <h3>3. WebSocket & Game</h3>
+        <button onclick="connectWS()">Connect WebSocket</button>
+        <button onclick="startGame()">Start Game (Host Only)</button>
+        <button onclick="rollDice()">Roll Dice</button>
+        <input type="number" id="tokenId" placeholder="Token ID (0-3)" value="0">
+        <button onclick="moveToken()">Move Token</button>
+    </div>
+
+    <div class="section">
+        <h3>Logs</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080/api';
+        let ws = null;
+
+        function log(msg) {
+            const el = document.getElementById('logs');
+            el.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        async function register() {
+            const u = document.getElementById('username').value;
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            try {
+                const res = await fetch(`${baseUrl}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, email: e, password: p })
+                });
+                    const text = await res.text();
+                    try {
+                        const data = JSON.parse(text);
+                        document.getElementById('token').value = data.token;
+                        document.getElementById('userId').value = data.user.id;
+                        log('Registered successfully');
+                    } catch(e) {
+                        log('Error registering: ' + text);
+                    }
+            } catch (err) { log('Error: ' + err); }
+        }
+
+        async function login() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            try {
+                const res = await fetch(`${baseUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: e, password: p })
+                });
+                    const text = await res.text();
+                    try {
+                        const data = JSON.parse(text);
+                        document.getElementById('token').value = data.token;
+                        document.getElementById('userId').value = data.user.id;
+                        log('Logged in successfully');
+                    } catch(e) {
+                        log('Error logging in: ' + text);
+                    }
+            } catch (err) { log('Error: ' + err); }
+        }
+
+        async function createRoom() {
+            const t = document.getElementById('token').value;
+            try {
+                const res = await fetch(`${baseUrl}/rooms`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${t}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('roomCode').value = data.room_code;
+                    log(`Created room: ${data.room_code}`);
+                } else {
+                    log('Error creating room: ' + JSON.stringify(data));
+                }
+            } catch (err) { log('Error: ' + err); }
+        }
+
+        async function joinRoom() {
+            const t = document.getElementById('token').value;
+            const c = document.getElementById('roomCode').value;
+            try {
+                const res = await fetch(`${baseUrl}/rooms/${c}/join`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${t}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    log(`Joined room: ${c}`);
+                } else {
+                    log('Error joining room: ' + JSON.stringify(data));
+                }
+            } catch (err) { log('Error: ' + err); }
+        }
+
+        function connectWS() {
+            const t = document.getElementById('token').value;
+            const c = document.getElementById('roomCode').value;
+            if (!t || !c) {
+                log('Need token and room code to connect WebSocket');
+                return;
+            }
+
+            if (ws) {
+                ws.close();
+            }
+
+            ws = new WebSocket(`ws://localhost:8080/ws?room=${c}&token=${t}`);
+
+            ws.onopen = () => log('WebSocket connected');
+            ws.onclose = () => log('WebSocket disconnected');
+            ws.onerror = (e) => log('WebSocket error');
+            ws.onmessage = (msg) => {
+                try {
+                    const ev = JSON.parse(msg.data);
+                    log(`WS EVENT: ${ev.type} | Payload: ${JSON.stringify(ev.payload || {})}`);
+                } catch(e) {
+                    log(`Raw WS Message (failed to parse): ${msg.data}`);
+                }
+            };
+        }
+
+        function sendWSEvent(type, payload) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('WebSocket not connected');
+                return;
+            }
+            ws.send(JSON.stringify({ type, payload }));
+        }
+
+        function startGame() {
+            sendWSEvent('start_game');
+        }
+
+        function rollDice() {
+            sendWSEvent('roll_dice');
+        }
+
+        function moveToken() {
+            const tid = parseInt(document.getElementById('tokenId').value);
+            sendWSEvent('move_token', { token_id: tid });
+        }
+    </script>
+</body>
+</html>

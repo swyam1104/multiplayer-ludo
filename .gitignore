@@ -1,0 +1,9 @@
+# Binaries
+ludo-server
+server
+
+# OS files
+.DS_Store
+
+# Go files
+# If you are using go modules you should not ignore go.mod and go.sum.
