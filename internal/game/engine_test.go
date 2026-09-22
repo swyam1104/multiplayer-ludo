@@ -75,7 +75,7 @@ func TestEngine_Movement(t *testing.T) {
 		t.Fatalf("expected successful move, got %v", err)
 	}
 
-	redPlayer := eng.getPlayerByColor(models.ColorRed)
+	redPlayer := eng.GetPlayerByColor(models.ColorRed)
 	if redPlayer.Tokens[0].State != TokenStateTrack || redPlayer.Tokens[0].StepsMoved != 1 {
 		t.Errorf("expected token on track at step 1, got state %v, step %d", redPlayer.Tokens[0].State, redPlayer.Tokens[0].StepsMoved)
 	}
@@ -88,8 +88,8 @@ func TestEngine_Capture(t *testing.T) {
 	eng.StartGame()
 
 	// Set up capture scenario
-	p1 := eng.getPlayerByColor(models.ColorRed)
-	p2 := eng.getPlayerByColor(models.ColorBlue)
+	p1 := eng.GetPlayerByColor(models.ColorRed)
+	p2 := eng.GetPlayerByColor(models.ColorBlue)
 
 	p1.Tokens[0].State = TokenStateTrack
 	p1.Tokens[0].StepsMoved = 41 // Absolute position 40 (since red offset is 0, pos = 41 - 1 = 40)

@@ -1,6 +1,8 @@
 # Binaries
 ludo-server
 server
+*.exe
+ludo_server.exe
 
 # OS files
 .DS_Store

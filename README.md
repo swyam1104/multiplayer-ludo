@@ -15,13 +15,22 @@ This is a real-time, stateful Ludo game backend written in Go.
 - MySQL running natively (Ensure you have a `ludo` database created and a `ludo_user` configured. See `start.sh` for exact connection strings).
 
 ### Running Locally
-1. Run the start script to compile the backend and start the server:
-   ```sh
-   ./start.sh
-   ```
-2. Open `demo.html` in your browser (you can double-click it in Finder).
-3. Open a second browser window to act as Player 2.
-4. Use the demo client to register users, create a room, connect the WebSockets, and play the game!
+- **On Linux / macOS:**
+  ```sh
+  ./start.sh
+  ```
+- **On Windows:**
+  1. Start MySQL daemon (if not running as a service):
+     ```cmd
+     start_mysql.bat
+     ```
+  2. Start the server:
+     ```cmd
+     run_server.bat
+     ```
+- Open `http://localhost:8080/` or `demo.html` in your browser.
+- Open a second browser window to act as Player 2.
+- Use the demo client to register users, create a room, connect the WebSockets, and play the game!
 
 ## Architecture
 - **Game Engine**: A pure Go state machine. Entirely isolated from networking for robust unit testing.

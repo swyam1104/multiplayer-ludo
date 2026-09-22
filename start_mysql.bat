@@ -1,0 +1,3 @@
+@echo off
+echo Starting MySQL 8.4...
+"C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld.exe" --datadir="C:\ProgramData\MySQL\MySQL Server 8.4\Data" --port=3306 --bind-address=127.0.0.1 --console
