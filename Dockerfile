@@ -12,6 +12,7 @@ FROM alpine:latest
 
 WORKDIR /app
 COPY --from=builder /app/main .
+COPY --from=builder /app/demo.html .
 
 EXPOSE 8080
 CMD ["./main"]
