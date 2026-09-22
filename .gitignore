@@ -1,6 +1,6 @@
 # Binaries
-ludo-server
-server
+/ludo-server
+/server
 *.exe
 ludo_server.exe
 
