@@ -44,9 +44,10 @@
         <h3>Logs</h3>
         <div id="logs"></div>
     </div>
-
     <script>
-        const baseUrl = 'http://localhost:8080/api';
+        const isHttps = window.location.protocol === 'https:';
+        const host = window.location.host || 'localhost:8080';
+        const baseUrl = `${window.location.protocol}//${host}/api`;
         let ws = null;
 
         function log(msg) {
@@ -144,7 +145,8 @@
                 ws.close();
             }
 
-            ws = new WebSocket(`ws://localhost:8080/ws?room=${c}&token=${t}`);
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${wsProtocol}//${host}/ws?room=${c}&token=${t}`);
 
             ws.onopen = () => log('WebSocket connected');
             ws.onclose = () => log('WebSocket disconnected');
